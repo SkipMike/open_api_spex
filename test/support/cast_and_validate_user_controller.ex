@@ -39,6 +39,54 @@ defmodule OpenApiSpexTest.CastAndValidateUserController do
     })
   end
 
+  defmodule Query do
+    require OpenApiSpex
+    alias OpenApiSpex.Schema
+
+    OpenApiSpex.schema(%{
+      title: "Query",
+      type: :object,
+      properties: %{
+        user: %Schema{type: :integer},
+        name: %Schema{type: :string}
+      },
+      required: [:user, :name]
+    })
+  end
+
+  def query_operation() do
+    import Operation
+
+    %Operation{
+      tags: ["users"],
+      summary: "Query users",
+      description: "Query all useres",
+      operationId: "UserController.query",
+      parameters: [
+        parameter(:query, :query, Query, "JSON encoded Query",
+          style: :deepObject,
+          explode: true,
+          required: true
+        )
+      ],
+      responses: %{
+        200 => response("User List Response", "application/json", Schemas.UsersResponse)
+      }
+    }
+  end
+
+  def query(conn, _params) do
+    json(conn, %Schemas.UsersResponse{
+      data: [
+        %Schemas.User{
+          id: 123,
+          name: "joe user",
+          email: "joe@gmail.com"
+        }
+      ]
+    })
+  end
+
   def index_operation() do
     import Operation
 

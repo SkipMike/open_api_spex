@@ -11,6 +11,7 @@ defmodule OpenApiSpex.CastParameters do
     # Convert parameters to an object schema, then delegate to `Cast.Object.cast/1`
 
     # Operation's parameters list may include references - resolving here
+
     resolved_parameters =
       Enum.map(operation.parameters, fn
         ref = %Reference{} -> Reference.resolve_parameter(ref, components.parameters)
@@ -33,7 +34,28 @@ defmodule OpenApiSpex.CastParameters do
       required: required
     }
 
-    params = Map.merge(conn.path_params, conn.query_params)
+    query_params =
+      resolved_parameters
+      |> Enum.filter(&Map.has_key?(conn.query_params, &1.name |> to_string()))
+      |> Enum.map(fn
+        %{style: :deepObject, name: name} ->
+          stringed_name = name |> to_string()
+
+          conn.query_params
+          |> Map.get(name |> to_string())
+          |> Jason.decode()
+          |> case do
+            {:ok, decoded} -> {stringed_name, decoded}
+            _ -> {stringed_name, conn.query_params[stringed_name]}
+          end
+
+        %{name: name} ->
+          stringed_name = name |> to_string()
+          {stringed_name, conn.query_params[stringed_name]}
+      end)
+      |> Enum.into(Map.new())
+
+    params = Map.merge(conn.path_params, conn.query_params |> Map.merge(query_params))
 
     ctx = %Cast{value: params, schema: object_schema, schemas: components.schemas}
 

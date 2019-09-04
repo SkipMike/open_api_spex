@@ -37,6 +37,23 @@ defmodule OpenApiSpex.Plug.CastAndValidateTest do
     end
 
     @tag :capture_log
+    test "complex query params" do
+      params = %{
+        user: 1,
+        name: "beebop"
+      }
+
+      conn =
+        :get
+        |> Plug.Test.conn(
+          "/api/cast_and_validate_test/users/query?query=#{Jason.encode!(params)}"
+        )
+        |> OpenApiSpexTest.Router.call([])
+
+      assert conn.status == 200
+    end
+
+    @tag :capture_log
     test "with requestBody" do
       body =
         Jason.encode!(%{

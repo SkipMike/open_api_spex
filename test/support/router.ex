@@ -19,6 +19,7 @@ defmodule OpenApiSpexTest.Router do
     # Used by CastAndValidateTest
     scope "/cast_and_validate_test" do
       get "/users", CastAndValidateUserController, :index
+      get "/users/query", CastAndValidateUserController, :query
       get "/users/:id", CastAndValidateUserController, :show
       post "/users", CastAndValidateUserController, :create
       post "/users/:id/contact_info", CastAndValidateUserController, :contact_info
